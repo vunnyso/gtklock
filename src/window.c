@@ -150,6 +150,15 @@ static gpointer window_pw_wait(gpointer data) {
 			case PW_ERROR:
 				{
 					char *err = auth_get_error();
+					// To avoid overflow of errors in gtk window
+					if(gtklock->errors->len > 10) {
+						char *err = g_array_index(gtklock->errors, char *, 0);
+						if(err == data) {
+							g_array_remove_index(gtklock->errors, 0);
+							g_free(err);
+							window_setup_messages(ctx);
+						}
+					}
 					g_array_append_val(gtklock->errors, err);
 					g_main_context_invoke(NULL, window_pw_message, ctx);
 				}
@@ -157,6 +166,15 @@ static gpointer window_pw_wait(gpointer data) {
 			case PW_MESSAGE:
 				{
 					char *msg = auth_get_message();
+					// To avoid overflow of messages in gtk window
+					if(gtklock->messages->len > 10) {
+						char *msg = g_array_index(gtklock->messages, char *, 0);
+						if(msg == data) {
+							g_array_remove_index(gtklock->messages, 0);
+							g_free(msg);
+							window_setup_messages(ctx);
+						}
+					}
 					g_array_append_val(gtklock->messages, msg);
 					g_main_context_invoke(NULL, window_pw_message, ctx);
 				}
